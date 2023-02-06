@@ -104,9 +104,15 @@ export type CustomRequestInit = Omit<RequestInit, 'headers'> & {
   readonly headers: Headers
 }
 
+export type FetchFn = (
+	input: RequestInfo | URL,
+	init?: RequestInit | undefined
+) => Promise<Response>;
+
 export type Fetch = (
   url: string,
   init: CustomRequestInit,
+  fetch: FetchFn
 ) => Promise<ApiResponse>
 
 export type _TypedFetch<OP> = (
@@ -161,7 +167,8 @@ export type Request = {
   queryParams: string[] // even if a post these will be sent in query
   payload: any
   init?: RequestInit
-  fetch: Fetch
+  fetch: Fetch,
+  fetchfn: FetchFn
 }
 
 export type ApiResponse<R = any> = {

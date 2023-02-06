@@ -5,6 +5,7 @@ import {
   CustomRequestInit,
   Fetch,
   FetchConfig,
+  FetchFn,
   Method,
   Middleware,
   OpArgType,
@@ -162,8 +163,8 @@ async function getResponseData(response: Response) {
   }
 }
 
-async function fetchJson(url: string, init: RequestInit): Promise<ApiResponse> {
-  const response = await fetch(url, init)
+async function fetchJson(url: string, init: RequestInit, fetchfn: FetchFn): Promise<ApiResponse> {
+  const response = await fetchfn(url, init)
 
   const data = await getResponseData(response)
 
@@ -183,7 +184,7 @@ async function fetchJson(url: string, init: RequestInit): Promise<ApiResponse> {
   throw new ApiError(result)
 }
 
-function wrapMiddlewares(middlewares: Middleware[], fetch: Fetch): Fetch {
+function wrapMiddlewares(middlewares: Middleware[], fetch: Fetch, fetchfn: FetchFn): Fetch {
   type Handler = (
     index: number,
     url: string,
@@ -192,7 +193,7 @@ function wrapMiddlewares(middlewares: Middleware[], fetch: Fetch): Fetch {
 
   const handler: Handler = async (index, url, init) => {
     if (middlewares == null || index === middlewares.length) {
-      return fetch(url, init)
+      return fetch(url, init, fetchfn)
     }
     const current = middlewares[index]
     return await current(url, init, (nextUrl, nextInit) =>
@@ -206,7 +207,7 @@ function wrapMiddlewares(middlewares: Middleware[], fetch: Fetch): Fetch {
 async function fetchUrl<R>(request: Request) {
   const { url, init } = getFetchParams(request)
 
-  const response = await request.fetch(url, init)
+  const response = await request.fetch(url, init, request.fetchfn)
 
   return response as ApiResponse<R>
 }
@@ -239,11 +240,11 @@ function createFetch<OP>(fetch: _TypedFetch<OP>): TypedFetch<OP> {
   return fun
 }
 
-function fetcher<Paths>() {
+function fetcher<Paths>(fetchfn: FetchFn) {
   let baseUrl = ''
   let defaultInit: RequestInit = {}
   const middlewares: Middleware[] = []
-  const fetch = wrapMiddlewares(middlewares, fetchJson)
+  const fetch = wrapMiddlewares(middlewares, fetchJson, fetchfn)
 
   return {
     configure: (config: FetchConfig) => {
@@ -265,6 +266,7 @@ function fetcher<Paths>() {
               payload,
               init: mergeRequestInit(defaultInit, init),
               fetch,
+              fetchfn
             }),
           )) as CreateFetch<M, Paths[P][M]>,
       }),
@@ -273,5 +275,5 @@ function fetcher<Paths>() {
 }
 
 export const Fetcher = {
-  for: <Paths extends OpenapiPaths<Paths>>() => fetcher<Paths>(),
+  for: <Paths extends OpenapiPaths<Paths>>(fetchfn: FetchFn) => fetcher<Paths>(fetchfn),
 }
