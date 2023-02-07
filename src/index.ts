@@ -12,6 +12,7 @@ import type {
   OpDefaultReturnType,
   OpReturnType,
   TypedFetch,
+  FetchFn,
 } from './types.js'
 
 import { ApiError } from './types.js'
@@ -27,6 +28,7 @@ export type {
   ApiResponse,
   Middleware,
   TypedFetch,
+  FetchFn,
 }
 
 export { Fetcher, ApiError, arrayRequestBody }
