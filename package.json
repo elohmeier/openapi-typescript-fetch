@@ -1,5 +1,5 @@
 {
-  "name": "@qdrant/openapi-typescript-fetch",
+  "name": "@nerdworks/openapi-typescript-fetch",
   "description": "A typed fetch client for openapi-typescript",
   "version": "1.2.1",
   "engines": {
